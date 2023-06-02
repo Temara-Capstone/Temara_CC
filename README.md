@@ -12,7 +12,7 @@ if you don't want to use nodemon for run the server, you can change the configur
 **/api/users ` --------> get all users`<br/>
 /api/users/:id ` -----> get user by id`<br/>
 /api/register<br/>
-/api/auth ` ---------> auth login to login`<br/>
+/api/login ` ---------> auth login to login`<br/>
 /api/token<br/>
 /api/logout<br/>
 /api/profile/:id ` ----> get profile user by id`<br/>
