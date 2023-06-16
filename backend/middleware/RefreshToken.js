@@ -14,6 +14,7 @@ const refreshToken = async (req, res) =>{
                 if (err) {
                     res.status(403).json({
                         status: 'error',
+                        error: true,
                         message: 'Forbidden',
                     });
                     return;
@@ -21,11 +22,19 @@ const refreshToken = async (req, res) =>{
                 const userId = results[0].id
                 const name = results[0].name
                 const email = results[0].email
+                const image = results[0].image
                 const bearerToken = jwt.sign({userId, name, email}, process.env.ACC_JWT_SECRET, {expiresIn: '20s'})
 
                 res.status(200).json({
                     status: 'success',
-                    bearerToken: bearerToken
+                    error: false,
+                    results: {
+                        userId: userId,
+                        name: name,
+                        image: image,
+                        token: bearerToken
+                    }
+                    
                 })
             })
         })

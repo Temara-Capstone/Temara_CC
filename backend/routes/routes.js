@@ -5,42 +5,58 @@ const {
     registrasi,
     logout,
     profile,
-    getUserById
+    getUserById,
+    updateProfile,
+    changePassword
 }  = require('../controllers/userData')
-const {
-    getByThreadID, getByUserID, getThread, postingThread, updatingThread, delThread
-}  = require('../controller/forumController')
 
 const VerifyToken = require('../middleware/VerifyToken')
 const refreshToken = require('../middleware/RefreshToken')
-const {postThread} = require("../controllers/forumController");
+const {
+    getByThreadID, getByUserID, getThread, postingThread, updatingThread, delThread
+}  = require('../controllers/forumController')
 const {
     getAllArticles,
-    getArticleById
+    getArticleById,
+    searchArticles
 } = require("../controllers/articleController");
 const {getRandomQuotes} = require("../controllers/quotesModel");
+// const multer = require('multer')
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//       cb(null, 'uploads');
+//     },
+//     filename: (req, file, cb) => {
+//       cb(null, file.originalname);
+//     }
+//   });
+// Create multer upload instance
+const upload = require('../middleware/multerConfig');
 const setupRoutes = (app)=>{
     app.get('/api/users', VerifyToken, getAllUser)
-    app.post('/api/users/register', registrasi)
-    app.post('/api/users/auth', authUser)
+    app.post('/api/register', upload.none(), registrasi)
+    app.post('/api/login', upload.none(), authUser)
     app.delete('/api/users/delete/:id', (req, res)=>{
         delUserData(req, (result)=>{
             res.json(result)
         })
     })
     app.get('/api/token', refreshToken)
-    app.delete('/api/logout', logout)
-    app.get('/api/users/profile/:id', profile)
-    app.get('/api/users/user/:id', getUserById)
-    app.get('/api/articles', getAllArticles)
-    app.get('/api/articles/:id', getArticleById)
-    app.get('/api/quotes', getRandomQuotes)
-    app.get('/api/forum', getThread)
-    app.get('/api/forum/:id', getByThreadID)
-    app.get('/api/forum/user/:user_id', getByUserID)
-    app.post('/api/forum', postingThread)
-    app.put('/api/forum/:id', updatingThread)
-    app.delete('/api/forum/:id', delThread)
+    app.delete('/api/logout', VerifyToken, logout)
+    app.get('/api/profile/:id', VerifyToken, profile)
+    app.get('/api/forum', VerifyToken, getThread)
+    app.get('/api/forum/:id', VerifyToken, getByThreadID)
+    app.get('/api/forum/user/:user_id', VerifyToken, getByUserID)
+    app.post('/api/forum/post', VerifyToken, upload.single('image'), postingThread)
+    app.put('/api/forum/update/:id', VerifyToken, upload.single('image'), updatingThread)
+    app.delete('/api/forum/delete/:id', VerifyToken, delThread)
+    app.get('/api/users/:id', VerifyToken, getUserById)
+    app.get('/api/articles', VerifyToken, getAllArticles)
+    app.get('/api/articles/:id', VerifyToken, getArticleById)
+    app.get('/api/quotes', VerifyToken, getRandomQuotes)
+    app.put('/api/profile/update', VerifyToken, upload.single('image'), updateProfile)
+    app.put('/api/changePassword', VerifyToken, upload.none(), changePassword)
+    app.get('/api/search/:search', VerifyToken, upload.none(), searchArticles)
 }
 
 module.exports = setupRoutes

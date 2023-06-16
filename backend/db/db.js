@@ -1,15 +1,18 @@
-const mysql = require('mysql')
+const mysql = require('mysql2')
 // const bcrypt = require('bcrypt')
 
 const conn = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE
+    // socketPath: '/cloudsql/temara-project:asia-southeast2:temara',
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    password: process.env.MYSQL_PASSWORD,
+    database: process.env.MYSQL_DATABASE
 })
 
 conn.connect(function(error){
-    if(error) throw error
+    if(error){
+        console.error(error)
+    }
     console.log('Connected to temara')
 })
 

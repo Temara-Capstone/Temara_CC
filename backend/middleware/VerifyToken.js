@@ -13,9 +13,13 @@ const VerifyToken = async (req, res, next) =>{
                 res.status(401).json({message: 'Invalid Token'})
             }
         }
-        else{
-            res.status(401).json({message: 'No Token Provided'})
+        else {
+            res.redirect('/');
+            return;
         }
+    } else {
+      res.redirect('/');
+      return;
     }
 }
 

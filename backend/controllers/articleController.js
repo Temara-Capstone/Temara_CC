@@ -5,19 +5,10 @@ const getAllArticles = (req, res)=>{
 }
 
 const getArticleById = (req, res) => {
-    Articles.getArticleById(req, res, (err, results)=>{
-        if(err){
-            console.error(err)
-            res.status(404).json({
-                status: 'error',
-                message: 'Article Not Found'
-            })
-        }
-        res.status(200).json({
-            status: 'success',
-            message: 'Get Article By Id Found',
-            result: results
-        })
-    })
+    Articles.getArticleById(req, res)
 }
-module.exports = { getAllArticles, getArticleById }
+
+const searchArticles = (req, res) =>{
+    Articles.searchArticles(req, res)
+}
+module.exports = { getAllArticles, getArticleById, searchArticles }

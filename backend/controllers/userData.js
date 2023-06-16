@@ -3,6 +3,8 @@ const Users = require('../models/UserModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
+
+
 const getAllUser = (req,res)=>{
     Users.getAllUsers((err, users)=>{
         if(err) throw err
@@ -17,11 +19,13 @@ const getUserById = (req, res)=>{
             console.error(err)
             res.status(404).json({
                 status: 'error',
+                error: true,
                 message: 'User Not Found'
             })
         }
         res.status(200).json({
             status: 'success',
+            error: false,
             message: 'User Found',
             result: results
         })
@@ -31,38 +35,67 @@ const getUserById = (req, res)=>{
 
 
 const registrasi = async (req, res) => {
-    try{
+    Users.registerUser(req,res)
+    // try{
 
-        const { email} = req.body
-        Users.getUserByWhere('email', email,  async (err, result) => {
-            if (err) {
-                throw err;
-            }
-            if (result.length > 0) {
-                return res.json({ msg: 'email sudah terdaftar' });
-            }
-            // Continue with user registration process
-            const salt = await bcrypt.genSalt(10)
-            const hash = await bcrypt.hash(req.body.password, salt)
+    //     const { name, email, password} = req.body
+    //     const gmailRegex = new RegExp("@gmail.com$");
+    //     const isGmailEmail = gmailRegex.test(email)
+    //     if(name === null || name === ""){
+    //         return res.status(400).json({
+    //             status: 'error',
+    //             error: true,
+    //             message: 'Invalid Name. Name Required'
+    //         })
+    //     }
+    //     if(!isGmailEmail){
+    //         return res.status(400).json({
+    //             status: 'error',
+    //             error: true,
+    //             message: 'Invalid Email Domain'
+    //         })
+    //     }
+    //     if(password.length <= 8){
+    //         return res.status(400).json({
+    //             status: 'error',
+    //             error: true,
+    //             message: 'Password Required 8 Character or More'
+    //         })
+    //     }
+    //     Users.getUserByWhere('email', email,  async (err, result) => {
+    //         if (err) {
+    //             throw err;
+    //         }
+    //         if (result.length > 0) {
+    //             return res.json({ msg: 'email sudah terdaftar' });
+    //         }
+    //         // Continue with user registration process
+    //         const salt = await bcrypt.genSalt(10)
+    //         const hash = await bcrypt.hash(password, salt)
 
-            await Users.registerUser(req, hash, (err)=>{
-                if(err){
-                    res.status(401).json({
-                        status: 'error',
-                        message: 'Data invalid'
-                    })
-                }else{
-                    res.status(200).json({
-                        status: 'success',
-                        message: 'Data added'
-                    })
-                }
-            })
-        })
-    }catch(e){
-        console.error(e)
-        res.status(500).json({ status: 'error', message: "Internal Server Error" })
-    }
+    //         await Users.registerUser(req, hash, (err)=>{
+    //             if(err){
+    //                 res.status(401).json({
+    //                     status: 'error',
+    //                     error: true,
+    //                     message: 'Data invalid'
+    //                 })
+    //             }else{
+    //                 res.status(200).json({
+    //                     status: 'success',
+    //                     error: false,
+    //                     message: 'Data added'
+    //                 })
+    //             }
+    //         })
+    //     })
+    // }catch(e){
+    //     console.error(e)
+    //     res.status(500).json({ 
+    //         status: 'error',
+    //         error: true,
+    //         message: "Internal Server Error" })
+    // }
 
 }
 
@@ -71,21 +104,37 @@ const authUser = (req, res) => {
     try{
         console.log(req.body)
         const password = req.body.password
-        Users.getUserByWhere('email', req.body.email,async (err, result) =>{
+        const email = req.body.email
+        const gmailRegex = new RegExp("@gmail.com$");
+        const isGmailEmail = gmailRegex.test(email)
+        if(!isGmailEmail){
+            return res.status(400).json({
+                status: 'error',
+                error: true,
+                message: 'Invalid Email Domain'
+            })
+        }
+        Users.getUserByWhere('email', email,async (err, result) =>{
             if(err) throw err
             console.log(result)
             const userId = result[0].id
             const name = result[0].name
+            const image = result[0].image
             const email = result[0].email
             const isMatch = await bcrypt.compare(password, result[0].password);
-            if(!isMatch) return res.status(400).json({ message: "Password Salah"})
+            if(!isMatch) return res.status(400).json({ 
+                status: 'error',
+                error: true,
+                message: "Wrong Password"
+            })
             
-            const bearerToken = jwt.sign({userId, name, email}, process.env.ACC_JWT_SECRET, { expiresIn: "15s"})
+            const bearerToken = jwt.sign({userId, name, email}, process.env.ACC_JWT_SECRET, { expiresIn: "30d"})
             const refreshBearerToken = jwt.sign({userId, name, email}, process.env.REF_JWT_SECRET, { expiresIn: "1d"})
 
             Users.updateUserToken({id:userId, token:refreshBearerToken},(err)=>{
                 if(err) return res.status(500).json({
                     status: 'error',
+                    error: true,
                     message: 'Internal Server Error'
                 })
             })
@@ -95,9 +144,12 @@ const authUser = (req, res) => {
             })
             res.status(200).json({
                 status: 'success',
+                error: false,
                 data: {
                     userId: userId,
-                    bearerToken: bearerToken
+                    name: name,
+                    image: image,
+                    token: bearerToken
                 }
             })
         })
@@ -109,7 +161,7 @@ const authUser = (req, res) => {
         
 function delUserData(req, res){
     const id = req.params.id
-    conn.query(`DELETE FROM user WHERE id = ${id}`, (err) => {
+    conn.execute(`DELETE FROM user WHERE id = ${id}`, (err) => {
         if (err) {
             console.error(err)
             }else{
@@ -121,18 +173,20 @@ function delUserData(req, res){
 
 const logout = async (req, res)=>{
     try{
-        const refBearerToken = req.cookies.refreshBearerToken
+        const token = req.cookies.refreshBearerToken
         await Users.getUserByWhere('refresh_bearer_token', refBearerToken, (err, results)=>{
             if(err){
                 res.status(404).json({
                     status: 'error',
+                    error: true,
                     message: 'User Not Found'
                 })
             }
-            Users.updateUserToken({ userId: results[0].id, refBearerToken: null},(err)=>{
+            Users.updateUserToken({ id: results[0].id, token: null},(err)=>{
                 if(err){
                     res.status(404).json({
                         status: 'error',
+                        error: true,
                         message: 'User Not Found'
                     })
                 }
@@ -140,6 +194,7 @@ const logout = async (req, res)=>{
             res.clearCookie('refreshBearerToken')
             res.status(200).json({
                 status: 'success',
+                error: false.valueOf,
                 message: 'Berhasil Logout'
             })
         })
@@ -147,6 +202,7 @@ const logout = async (req, res)=>{
         console.error(e)
         res.status(500).json({
             status: 'error',
+            error: true,
             message: 'Internal Server Error'
         })
     }
@@ -155,29 +211,64 @@ const logout = async (req, res)=>{
 const profile = async (req, res)=>{
     try{
         const userId = req.params.id
-        await Users.getUserByWhere('id', userId, (err, results)=>{
+        Users.getUserByWhere('id', userId, (err, results)=>{
             if(err){
                 res.status(401).json({
                     status: 'error',
+                    error: true,
                     message: 'Invalid'
                 })
             }
             console.log(results)
             res.status(200).json({
                 status: 'success',
+                error: false,
                 message: 'User Found',
-                result: results[0]
+                result: {
+                    userId: results[0].id,
+                    name: results[0].name,
+                    email: results[0].email,
+                    gender: results[0].gender,
+                    dateofbirth: results[0].dateofbirth,
+                    no_hp: results[0].no_hp,
+                    image: `https://storage.googleapis.com/profile-image-042/${results[0].image}`,
+                }
             })
         })
     }catch (e) {
         console.error(e)
         res.status(500).json({
             status: 'error',
+            error: true,
             message: 'Internal Server Error'
         })
     }
 }
 
 
+const updateProfile = async (req, res) => {
+    try{
+        Users.updateProfile(req,res)  
+    }catch(e){
+        console.error(err);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal Server Error',
+        });
+    }
+};
 
-module.exports = { registrasi, getAllUser, delUserData, authUser, logout, profile, getUserById}
+const changePassword = (req, res)=>{
+    try{
+        Users.changePassword(req, res)
+        
+    }catch(e){
+        console.error(err);
+        res.status(500).json({
+            status: 'error',
+            message: 'Internal Server Error',
+        });
+    }
+}
+
+module.exports = { registrasi, getAllUser, delUserData, authUser, logout, profile, getUserById, updateProfile, changePassword}
