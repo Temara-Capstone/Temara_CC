@@ -68,7 +68,7 @@ const Users = {
                     message: 'Invalid Email Domain'
                 })
             }
-            if(password.length <= 8){
+            if(password.length < 8){
                 return res.status(400).json({
                     status: 'error',
                     error: true,
@@ -179,11 +179,6 @@ const Users = {
 
     updateProfile: async (req, res)=>{
         const {id } = req.body
-        try {
-            console.log("Success");
-        } catch (error) {
-            res.send("Error:" + error);
-        }
         console.log("Made it /upload");
         
         try {
@@ -204,10 +199,11 @@ const Users = {
                 const exists = await file.exists()
                 if (!exists[0]) {
                     console.log('File does not exist.');
-                    return;
+                }else{
+                    await file.delete()
+                    console.log('File deleted successfully.');
                 }
-                await file.delete()
-                console.log('File deleted successfully.');
+                
             }
 
             const { name, email, gender, dateofbirth, no_hp } = req.body;
