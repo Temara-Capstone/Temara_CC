@@ -1,1 +1,0 @@
-# Temara_CC
