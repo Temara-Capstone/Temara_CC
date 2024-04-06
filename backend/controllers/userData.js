@@ -36,67 +36,6 @@ const getUserById = (req, res)=>{
 
 const registrasi = async (req, res) => {
     Users.registerUser(req,res)
-    // try{
-
-    //     const { name, email, password} = req.body
-    //     const gmailRegex = new RegExp("@gmail.com$");
-    //     const isGmailEmail = gmailRegex.test(email)
-    //     if(name === null || name === ""){
-    //         return res.status(400).json({
-    //             status: 'error',
-    //             error: true,
-    //             message: 'Invalid Name. Name Required'
-    //         })
-    //     }
-    //     if(!isGmailEmail){
-    //         return res.status(400).json({
-    //             status: 'error',
-    //             error: true,
-    //             message: 'Invalid Email Domain'
-    //         })
-    //     }
-    //     if(password.length <= 8){
-    //         return res.status(400).json({
-    //             status: 'error',
-    //             error: true,
-    //             message: 'Password Required 8 Character or More'
-    //         })
-    //     }
-    //     Users.getUserByWhere('email', email,  async (err, result) => {
-    //         if (err) {
-    //             throw err;
-    //         }
-    //         if (result.length > 0) {
-    //             return res.json({ msg: 'email sudah terdaftar' });
-    //         }
-    //         // Continue with user registration process
-    //         const salt = await bcrypt.genSalt(10)
-    //         const hash = await bcrypt.hash(password, salt)
-
-    //         await Users.registerUser(req, hash, (err)=>{
-    //             if(err){
-    //                 res.status(401).json({
-    //                     status: 'error',
-    //                     error: true,
-    //                     message: 'Data invalid'
-    //                 })
-    //             }else{
-    //                 res.status(200).json({
-    //                     status: 'success',
-    //                     error: false,
-    //                     message: 'Data added'
-    //                 })
-    //             }
-    //         })
-    //     })
-    // }catch(e){
-    //     console.error(e)
-    //     res.status(500).json({ 
-    //         status: 'error',
-    //         error: true,
-    //         message: "Internal Server Error" })
-    // }
-
 }
 
 
